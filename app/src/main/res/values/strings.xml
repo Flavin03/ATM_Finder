@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ATM_Finder</string>
+    <string name="google_maps_key">AIzaSyBqkqaBUnqeo9BPm-CWtAuIj9afdAoQeF0</string>
+    <string name="title_activity_maps">Map</string>
+</resources>
