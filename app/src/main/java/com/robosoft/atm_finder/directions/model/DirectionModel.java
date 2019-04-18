@@ -1,4 +1,4 @@
-package com.robosoft.atm_finder;
+package com.robosoft.atm_finder.directions.model;
 
 public class DirectionModel {
 

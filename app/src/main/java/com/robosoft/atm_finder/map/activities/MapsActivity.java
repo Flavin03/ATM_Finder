@@ -1,10 +1,8 @@
-package com.robosoft.atm_finder;
+package com.robosoft.atm_finder.map.activities;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -14,14 +12,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
-import android.widget.Adapter;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -31,9 +24,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -44,16 +34,19 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.libraries.places.widget.Autocomplete;
-import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
-import com.google.gson.Gson;
+import com.robosoft.atm_finder.databinding.ActivityMapsBinding;
+import com.robosoft.atm_finder.map.viewmodel.MapViewModel;
+import com.robosoft.atm_finder.utils.ConnectivityReceiver;
+import com.robosoft.atm_finder.DirectionCardListener;
+import com.robosoft.atm_finder.directions.activities.DirectionsActivity;
+import com.robosoft.atm_finder.utils.JSONParser;
+import com.robosoft.atm_finder.map.model.PlaceModel;
+import com.robosoft.atm_finder.R;
+import com.robosoft.atm_finder.map.adapter.RecyclerViewAdapter;
+import com.robosoft.atm_finder.utils.Utility;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -66,77 +59,41 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, DirectionCardListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, DirectionCardListener, Observer {
 
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 200;
     private static final int AUTOCOMPLETE_REQUEST_CODE = 100;
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
-    private Location mLastKnownLocation = null;
+    public static Location mLastKnownLocation = null;
     boolean doubleBackToExitPressedOnce = false;
     boolean mLocationPermissionGranted = false;
-    private String baseUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
     private static final String TAG = "MapsActivity";
     private ArrayList<PlaceModel> placeModelList = null;
-    private RecyclerView recyclerView = null;
     private RecyclerViewAdapter recyclerViewAdapter = null;
     private Polyline polyline = null;
-    private ImageView filter_image = null;
-    private String filterString = "bank";
+    private String filterType = "bank";
     private boolean isMarkerClick = false;
     private String placeName = null;
     private String placeAdd = null;
+
+    private ActivityMapsBinding mapsActivityBinding;
+    private MapViewModel mapViewModel;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        //setContentView(R.layout.activity_maps);
 
-        recyclerView = findViewById(R.id.recycler_view);
+        initDataBinding();
 
-        filter_image = findViewById(R.id.filter_image);
-        filter_image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-// custom dialog
-                final Dialog dialog = new Dialog(MapsActivity.this);
-                dialog.setContentView(R.layout.filter_dialog);
-                TextView textview_bank = (TextView) dialog.findViewById(R.id.textview_bank);
-                textview_bank.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        filterString = "bank";
-                        mMap.clear();
-                        requestPlaces(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), filterString);
-                        dialog.dismiss();
-                    }
-                });
-
-                TextView textview_atm = (TextView) dialog.findViewById(R.id.textview_atm);
-                textview_atm.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        filterString = "atm";
-                        mMap.clear();
-                        requestPlaces(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), filterString);
-                        dialog.dismiss();
-                    }
-                });
-
-                TextView textview_cancel = (TextView) dialog.findViewById(R.id.textview_cancel);
-                textview_cancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                    }
-                });
-
-                dialog.show();
-            }
-        });
+        setPlacesView(mapsActivityBinding.recyclerView);
+        setUpObserver(mapViewModel);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -148,12 +105,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         if (!Places.isInitialized()) {
-            Log.d(TAG, getResources().getString(R.string.google_maps_key));
             Places.initialize(this, getResources().getString(R.string.google_maps_key));
-            PlacesClient placesClient = Places.createClient(this);
         }
-
-        Log.d(TAG, "Places.initialize : " + Places.isInitialized());
 
 // Initialize the AutocompleteSupportFragment.
 
@@ -161,7 +114,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS, Place.Field.TYPES));
-
+        autocompleteFragment.setCountry("IN");
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -182,6 +135,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
 
+    }
+
+    private void initDataBinding() {
+        mapsActivityBinding = DataBindingUtil.setContentView(this, R.layout.activity_maps);
+        mapViewModel = new MapViewModel(this);
+        mapsActivityBinding.setMapViewModel(mapViewModel);
+    }
+
+    private void setPlacesView(RecyclerView placesView) {
+        RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter();
+        placesView.setAdapter(recyclerViewAdapter);
+        placesView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+    }
+
+    public void setUpObserver(Observable observable) {
+        observable.addObserver(this);
+    }
+
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if(o instanceof  MapViewModel) {
+             recyclerViewAdapter = (RecyclerViewAdapter) mapsActivityBinding.recyclerView.getAdapter();
+             mapViewModel = (MapViewModel) o;
+            recyclerViewAdapter.setPlaceModelList(mapViewModel.getPlaceModelList());
+        }
     }
 
 
@@ -283,7 +262,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Log.d(TAG, "Current location LatLng: " + mLastKnownLocation);
 
                             if(checkConnection()) {
-                                requestPlaces(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), filterString);
+
+                                mapViewModel.fetchPlacesList(Utility.requestPlaces(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), filterType, MapsActivity.this), mLastKnownLocation);
+
+                               // requestPlaces(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(), filterType);
                             }else {
                                 Toast.makeText(MapsActivity.this, "No Internet", Toast.LENGTH_SHORT).show();
                             }
@@ -304,66 +286,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean checkConnection() {
        return ConnectivityReceiver.isConnected();
-    }
-
-    private void requestPlaces(double lat, double lng, String type) {
-        String apiKey = getResources().getString(R.string.google_maps_key);
-        String requestUrl = baseUrl + "location=" + lat + "," + lng + "&rankby=distance&type=" + type + "&keyword=" + type + "&key=" + apiKey;
-        Log.d(TAG, "requestUrl: " + requestUrl);
-        NearbySearchAsync nearbySearchAsync = new NearbySearchAsync(requestUrl);
-        nearbySearchAsync.execute();
-    }
-
-    private void showNearBanks_atms(String response) {
-        Log.d(TAG, "response: " + response);
-        placeModelList = new ArrayList<>();
-        BitmapDescriptor icon = null;
-        try {
-            JSONObject jsonObject = new JSONObject(response);
-            String status = jsonObject.get("status").toString();
-            if (status.equalsIgnoreCase("OK")) {
-                JSONArray resultJsonObject = jsonObject.getJSONArray("results");
-
-                if (resultJsonObject.length() != 0 && resultJsonObject.length() >= 2) {
-                    for (int i = 0; i < 3; i++) {
-
-                        Gson gson = new Gson();
-                        PlaceModel placeModel = gson.fromJson(resultJsonObject.get(i).toString(), PlaceModel.class);
-                        Location location = new Location("");
-                        location.setLatitude(placeModel.getGeometry().getLocation().getLat());
-                        location.setLongitude(placeModel.getGeometry().getLocation().getLng());
-                        placeModel.setDistanceFrom((int) mLastKnownLocation.distanceTo(location));
-                        placeModel.setType(filterString);
-                        Log.d(TAG, "placeModel name: " + placeModel.getName());
-                        Log.d(TAG, "placeModel name: " + placeModel.getDistanceFrom());
-                        Log.d(TAG, "placeModel location.lat: " + placeModel.getGeometry().getLocation().getLat());
-                        placeModelList.add(placeModel);
-
-                        recyclerViewAdapter = new RecyclerViewAdapter(this, placeModelList, this);
-                        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-                        recyclerView.setLayoutManager(layoutManager);
-                        recyclerView.setItemAnimator(new DefaultItemAnimator());
-                        recyclerView.setAdapter(recyclerViewAdapter);
-
-                        if (filterString.equalsIgnoreCase("bank")) {
-                            icon = BitmapDescriptorFactory.fromResource(R.drawable.bank_icn);
-                        } else {
-                            icon = BitmapDescriptorFactory.fromResource(R.drawable.atm_icn);
-                        }
-                        mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())));
-                        mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).icon(icon)
-                                .title(placeModel.getName()));
-
-                    }
-                }
-            } else {
-                Toast.makeText(this, "" + status, Toast.LENGTH_SHORT).show();
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Override
@@ -405,14 +327,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onDirectionClick(int position) {
+
+
         Log.d(TAG, "position : " + position);
         placeModelList.get(position);
         LatLng startLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-        LatLng endLatLng = new LatLng(placeModelList.get(position).getGeometry().getLocation().getLat(),
-                placeModelList.get(position).getGeometry().getLocation().getLng());
+        LatLng endLatLng = new LatLng(placeModelList.get(position).geometry.location.lat,
+                placeModelList.get(position).geometry.location.lng);
 
-        placeName = placeModelList.get(position).getName();
-        placeAdd = placeModelList.get(position).getVicinity();
+        placeName = placeModelList.get(position).name;
+        placeAdd = placeModelList.get(position).vicinity;
 
         // Getting URL to the Google Directions API
         String url = getDirectionsUrl(startLatLng, endLatLng);
@@ -424,61 +348,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private class NearbySearchAsync extends AsyncTask<Object, String, String> {
 
-        String url = null;
-        public static final String REQUEST_METHOD = "GET";
-        public static final int READ_TIMEOUT = 15000;
-        public static final int CONNECTION_TIMEOUT = 15000;
-
-        public NearbySearchAsync(String url) {
-            this.url = url;
-        }
-
-        @Override
-        protected String doInBackground(Object... objects) {
-            String inputLine;
-            String result;
-            try {
-                //Create a URL object holding our url
-                URL myUrl = new URL(url);
-                //Create a connection
-                HttpURLConnection connection = (HttpURLConnection)
-                        myUrl.openConnection();
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Connect to our url
-                connection.connect();
-                //Create a new InputStreamReader
-                InputStreamReader streamReader = new
-                        InputStreamReader(connection.getInputStream());
-                //Create a new buffered reader and String Builder
-                BufferedReader reader = new BufferedReader(streamReader);
-                StringBuilder stringBuilder = new StringBuilder();
-                //Check if the line we are reading is not null
-                while ((inputLine = reader.readLine()) != null) {
-                    stringBuilder.append(inputLine);
-                }
-                //Close our InputStream and Buffered reader
-                reader.close();
-                streamReader.close();
-                //Set our result equal to our stringBuilder
-                result = stringBuilder.toString();
-            } catch (Exception e) {
-                e.printStackTrace();
-                result = null;
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            showNearBanks_atms(response);
-        }
-    }
 
 
     private String getDirectionsUrl(LatLng origin, LatLng dest) {
@@ -501,7 +371,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Building the url to the web service
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + apiKey;
-        ;
         Log.d(TAG, "DirectionsUrl :  " + url);
         return url;
     }
@@ -581,7 +450,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 Intent intent = new Intent(MapsActivity.this, DirectionsActivity.class);
                 intent.putExtra("DirectionResult",result);
-                intent.putExtra("filterString",filterString);
+                intent.putExtra("filterType", filterType);
                 intent.putExtra("placeName",placeName);
                 intent.putExtra("placeAdd",placeAdd);
                 startActivity(intent);
@@ -603,7 +472,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             try {
                 jObject = new JSONObject(jsonData[0]);
-                DirectionsJSONParser parser = new DirectionsJSONParser();
+                JSONParser parser = new JSONParser();
 
                 // Starts parsing data
                 routes = parser.parse(jObject);
@@ -674,6 +543,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // Drawing polyline in the Google Map for the i-th route
             // mMap.addPolyline(lineOptions);
         }
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        mapViewModel.reset();
     }
 
 }

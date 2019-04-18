@@ -1,10 +1,12 @@
-package com.robosoft.atm_finder;
+package com.robosoft.atm_finder.utils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+
+import com.robosoft.atm_finder.MyApplication;
 
 public class ConnectivityReceiver extends BroadcastReceiver {
 

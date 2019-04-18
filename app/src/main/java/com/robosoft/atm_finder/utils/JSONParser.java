@@ -1,8 +1,21 @@
-package com.robosoft.atm_finder;
+package com.robosoft.atm_finder.utils;
 
+import android.location.Location;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.robosoft.atm_finder.R;
+import com.robosoft.atm_finder.directions.model.DirectionModel;
+import com.robosoft.atm_finder.map.adapter.RecyclerViewAdapter;
+import com.robosoft.atm_finder.map.model.PlaceModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,12 +29,12 @@ import java.util.List;
  * @author Waleed Sarwar
  * @since September 28, 2015 9:04 AM
  */
-public class DirectionsJSONParser {
+public class JSONParser {
 
     /**
      * Receives a JSONObject and returns a list of lists containing latitude and longitude
      */
-    private static final String TAG = "DirectionsJSONParser";
+    private static final String TAG = "JSONParser";
 
     public List<List<HashMap<String, String>>> parse(JSONObject jObject) {
 
@@ -89,8 +102,9 @@ public class DirectionsJSONParser {
         return routes;
     }
 
-    public ArrayList<DirectionModel> parseDirection(JSONObject jObject) {
+    public ArrayList<DirectionModel> parseDirection(String directionResult) {
 
+        JSONObject jsonObject;
         ArrayList<DirectionModel> directionModelArrayList = new ArrayList<>();
         JSONArray jRoutes = null;
         JSONArray jLegs = null;
@@ -102,8 +116,9 @@ public class DirectionsJSONParser {
         String instructionString = null;
 
         try {
+            jsonObject = new JSONObject(directionResult);
 
-            jRoutes = jObject.getJSONArray("routes");
+            jRoutes = jsonObject.getJSONArray("routes");
 
             /** Traversing all routes */
             for (int i = 0; i < jRoutes.length(); i++) {
@@ -139,7 +154,6 @@ public class DirectionsJSONParser {
         }
         return directionModelArrayList;
     }
-
 
     /**
      * Method to decode polyline points
@@ -177,4 +191,7 @@ public class DirectionsJSONParser {
         }
         return poly;
     }
+
+
+
 }
