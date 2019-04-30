@@ -13,8 +13,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiFactory {
 
-    public static ApiService create() {
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(Constant.BASE_URL_PLACE)
+    public static ApiService create(String baseUrl) {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();

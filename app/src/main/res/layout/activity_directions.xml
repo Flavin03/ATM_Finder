@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".directions.activities.DirectionsActivity">
 
     <data>
@@ -14,7 +15,55 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:background="@color/colorAccent"
+            android:id="@+id/toolbar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/toolbar_layout"
+                android:weightSum="2"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginLeft="8dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textview_duration"
+                    android:text="@{directionViewModel.duration}"
+                    android:layout_weight="1"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:text="Axis Bank"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textview_distance"
+                    android:layout_weight="1"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:text="@{directionViewModel.distance}"
+                    tools:text="Axis Bank"/>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -41,7 +90,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1.5"
-                android:src="@drawable/atm_icn" />
+                android:src="@{directionViewModel.imageicon}"
+                tools:src="@drawable/bank_icn" />
 
             <LinearLayout
                 android:layout_width="fill_parent"
@@ -55,7 +105,8 @@
                     android:layout_height="wrap_content"
                     android:textColor="#000000"
                     android:textSize="16sp"
-                    android:text="Axis Bank"/>
+                    android:text="@{directionViewModel.placeName}"
+                    tools:text="Axis Bank"/>
 
                 <TextView
                     android:id="@+id/textview_place_address"
@@ -64,12 +115,21 @@
                     android:lines="2"
                     android:maxLines="2"
                     android:textSize="12sp"
-                    android:text="Vile Parle Andheri Mumbai"/>
+                    android:text="@{directionViewModel.placeDetail}"
+                    tools:text="Vile Parle Andheri Mumbai"/>
 
             </LinearLayout>
 
         </LinearLayout>
     </LinearLayout>
 
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="@{directionViewModel.progressBar}"/>
+
 </RelativeLayout>
+    </RelativeLayout>
 </layout>

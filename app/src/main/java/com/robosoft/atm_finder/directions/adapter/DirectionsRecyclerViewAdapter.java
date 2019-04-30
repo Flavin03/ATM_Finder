@@ -14,6 +14,7 @@ import com.robosoft.atm_finder.databinding.DirectionsRowBinding;
 import com.robosoft.atm_finder.directions.model.DirectionModel;
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.directions.model.Directions;
+import com.robosoft.atm_finder.directions.model.Steps;
 import com.robosoft.atm_finder.directions.viewmodel.DirectionListViewModel;
 import com.robosoft.atm_finder.directions.viewmodel.DirectionViewModel;
 
@@ -29,10 +30,10 @@ public class DirectionsRecyclerViewAdapter extends RecyclerView.Adapter<Directio
 
         public MyViewHolder(DirectionsRowBinding directionsRowBinding) {
             super(directionsRowBinding.directionLinearlayout);
-           this.directionsRowBinding = directionsRowBinding;
+            this.directionsRowBinding = directionsRowBinding;
         }
 
-        void bindDirections(Directions directions) {
+        void bindDirections(Steps directions) {
             if (directionsRowBinding.getDirectionListViewModel() == null) {
                 directionsRowBinding.setDirectionListViewModel(new DirectionListViewModel(directions, itemView.getContext()));
             } else {
@@ -60,7 +61,7 @@ public class DirectionsRecyclerViewAdapter extends RecyclerView.Adapter<Directio
     @Override
     public void onBindViewHolder(final DirectionsRecyclerViewAdapter.MyViewHolder holder, int position) {
 
-        holder.bindDirections(directionList.get(position));
+        holder.bindDirections(directionList.get(0).legs.get(0).steps.get(position));
 
        /* final DirectionModel directionModel = directionModelArrayList.get(position);
         holder.textview_instruction.setText(Html.fromHtml(directionModel.getInstruction()).toString().replaceAll("\n", ""));
@@ -81,6 +82,11 @@ public class DirectionsRecyclerViewAdapter extends RecyclerView.Adapter<Directio
 
     @Override
     public int getItemCount() {
-        return directionList.size();
+        //  return directionList.get(0).legs.get(0).steps.size();
+        if (directionList.size()==0) {
+            return directionList.size();
+        } else {
+            return directionList.get(0).legs.get(0).steps.size();
+        }
     }
 }

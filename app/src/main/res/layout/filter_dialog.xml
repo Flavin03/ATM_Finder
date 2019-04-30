@@ -1,55 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
 
-    <LinearLayout
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+
+        <variable
+            name="dialogViewModel"
+            type="com.robosoft.atm_finder.map.viewmodel.DialogViewModel"/>
+    </data>
+
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:id="@+id/textview_bank"
-            android:text="BANK"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:gravity="center"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <View
-            android:layout_width="fill_parent"
-            android:layout_height="0.5dp"
-            android:background="#c0c0c0"/>
+            <TextView
+                android:id="@+id/textview_bank"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="BANK"
+                android:onClick="@{dialogViewModel::onBankClick}"
+                android:textColor="#000000"
+                android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/textview_atm"
-            android:text="ATM"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:gravity="center"/>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="0.5dp"
+                android:background="#c0c0c0" />
 
-        <View
-            android:layout_width="fill_parent"
-            android:layout_height="0.5dp"
-            android:background="#c0c0c0"/>
+            <TextView
+                android:id="@+id/textview_atm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="ATM"
+                android:onClick="@{dialogViewModel::onAtmClick}"
+                android:textColor="#000000"
+                android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:id="@+id/textview_cancel"
-            android:text="Cancel"
-            android:textSize="16sp"
-            android:gravity="center"/>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="0.5dp"
+                android:background="#c0c0c0" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/textview_cancel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="Cancel"
+                android:onClick="@{dialogViewModel::onCancelClick}"
+                android:textSize="16sp" />
 
-</android.support.constraint.ConstraintLayout>
+        </LinearLayout>
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

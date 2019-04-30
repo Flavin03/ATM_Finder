@@ -3,37 +3,41 @@ package com.robosoft.atm_finder.directions.viewmodel;
 import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.BindingAdapter;
+import android.text.Html;
 import android.widget.ImageView;
 
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.directions.model.Directions;
+import com.robosoft.atm_finder.directions.model.Steps;
 
 public class DirectionListViewModel extends BaseObservable {
 
-    private Directions directions;
+    private Steps steps;
 
     private Context context;
 
-    public DirectionListViewModel(Directions directions, Context context) {
-        this.directions = directions;
+    public DirectionListViewModel(Steps steps, Context context) {
+        this.steps = steps;
         this.context = context;
     }
 
     public String getInstruction()
     {
-        return directions.routes.legs.steps.html_instructions;
+        return Html.fromHtml(steps.html_instructions).toString().replaceAll("\n", "");
+        //return null;
     }
 
     public String getDistance()
     {
-        return directions.routes.legs.steps.distance.value;
+        return steps.distance.value+" m";
+       // return null;
     }
 
     public String getDirectionIcon() {
         // The URL will usually come from a model (i.e Profile)
         String direction = null;
-        if(directions.routes.legs.steps.maneuver!=null) {
-            if (directions.routes.legs.steps.maneuver.contains("left")) {
+        if(steps.maneuver!=null) {
+            if (steps.maneuver.contains("left")) {
                 direction = "left";
             } else {
                 direction = "right";
@@ -46,24 +50,25 @@ public class DirectionListViewModel extends BaseObservable {
         return direction;
     }
 
-    @BindingAdapter({"android:src"})
-    public static void setDirectionIcon(ImageView view, String direction) {
+    /*@BindingAdapter({"android:src"})
+    //public static void setDirectionIcon(ImageView view, String imageUrl) {
+    public static void setImageicon(ImageView view, String imageUrl) {
 
-        if(direction!=null) {
-            if (direction.equalsIgnoreCase("left")) {
+        if(imageUrl!=null) {
+            if (imageUrl.equalsIgnoreCase("left")) {
                 view.setImageDrawable(view.getContext().getResources().getDrawable(R.drawable.arrow_left_icn));
-            } else if (direction.equalsIgnoreCase("right")) {
+            } else if (imageUrl.equalsIgnoreCase("right")) {
                 view.setImageDrawable(view.getContext().getResources().getDrawable(R.drawable.arrow_right_icn));
             } else {
                 view.setImageDrawable(view.getContext().getResources().getDrawable(R.drawable.arrow1_icn));
             }
         }
 
-    }
+    }*/
 
-    public void setDirections(Directions directions)
+    public void setDirections(Steps directions)
     {
-        this.directions = directions;
+        this.steps = directions;
         notifyChange();
     }
 

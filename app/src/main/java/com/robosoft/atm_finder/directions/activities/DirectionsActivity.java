@@ -5,32 +5,19 @@ import android.databinding.DataBindingUtil;
 import android.location.Location;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 
 import com.robosoft.atm_finder.databinding.ActivityDirectionsBinding;
-import com.robosoft.atm_finder.directions.model.DirectionModel;
 import com.robosoft.atm_finder.directions.viewmodel.DirectionViewModel;
-import com.robosoft.atm_finder.map.adapter.RecyclerViewAdapter;
 import com.robosoft.atm_finder.map.model.PlaceModel;
-import com.robosoft.atm_finder.map.viewmodel.MapViewModel;
-import com.robosoft.atm_finder.utils.JSONParser;
 import com.robosoft.atm_finder.directions.adapter.DirectionsRecyclerViewAdapter;
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.utils.Utility;
 
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -42,6 +29,8 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
     private String directionURL = null;
     private ActivityDirectionsBinding activityDirectionsBinding;
     private DirectionViewModel directionViewModel;
+    private static final String TAG = "DirectionsActivity";
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +40,7 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
         getIntentValue();
         setDirectionView(activityDirectionsBinding.recyclerView);
         setUpObserver(directionViewModel);
-        directionViewModel.fetchDirectionsList(directionURL);
+        directionViewModel.fetchDirectionsList(directionURL, placeModel);
 
     }
 
@@ -59,6 +48,9 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
         activityDirectionsBinding = DataBindingUtil.setContentView(this, R.layout.activity_directions);
         directionViewModel = new DirectionViewModel(this);
         activityDirectionsBinding.setDirectionViewModel(directionViewModel);
+        activityDirectionsBinding.recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL));
+        toolbar = activityDirectionsBinding.toolbar;
+        setSupportActionBar(toolbar);
     }
 
     private void setDirectionView(RecyclerView directionView) {
@@ -74,10 +66,12 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        if(o instanceof  MapViewModel) {
+        if(o instanceof  DirectionViewModel) {
             directionsRecyclerViewAdapter = (DirectionsRecyclerViewAdapter) activityDirectionsBinding.recyclerView.getAdapter();
             directionViewModel = (DirectionViewModel) o;
             directionsRecyclerViewAdapter.setDirectionList(directionViewModel.getDirectionsList());
+            activityDirectionsBinding.textviewDistance.setText(directionViewModel.getDistance());
+            activityDirectionsBinding.textviewDuration.setText(directionViewModel.getDuration());
         }
     }
 
@@ -92,6 +86,7 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
         if(placeModel!= null && location!=null)
         {
             directionURL = Utility.requestDirections(location,placeModel,this);
+            Log.d(TAG,"directionURL : "+directionURL);
         }
 
     }
@@ -125,5 +120,10 @@ public class DirectionsActivity extends AppCompatActivity implements Observer {
         }*//*
         return sortedMap;
     }*/
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        directionViewModel.reset();
+    }
 
 }

@@ -50,13 +50,13 @@ public class PlaceViewModel extends BaseObservable {
 
     public String getImageicon() {
         // The URL will usually come from a model (i.e Profile)
-        return "";
+        return placeModel.filterType;
     }
 
-    @BindingAdapter({"android:src"})
+   /* @BindingAdapter({"android:src"})
     public static void setImageicon(ImageView view, String imageUrl) {
        view.setImageDrawable(view.getContext().getResources().getDrawable(R.drawable.bank_icn));
-    }
+    }*/
 
     public void setPlace(PlaceModel placeModel) {
         this.placeModel = placeModel;

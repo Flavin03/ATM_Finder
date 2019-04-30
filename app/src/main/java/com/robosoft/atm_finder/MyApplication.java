@@ -6,6 +6,7 @@ import android.content.Context;
 import com.robosoft.atm_finder.network.ApiFactory;
 import com.robosoft.atm_finder.network.ApiService;
 import com.robosoft.atm_finder.utils.ConnectivityReceiver;
+import com.robosoft.atm_finder.utils.Constant;
 
 import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
@@ -41,7 +42,15 @@ public class MyApplication extends Application {
 
     public ApiService getPlaceService() {
         if (apiService == null) {
-            apiService = ApiFactory.create();
+            apiService = ApiFactory.create(Constant.BASE_URL_PLACE);
+        }
+
+        return apiService;
+    }
+
+    public ApiService getDirectionService() {
+        if (apiService == null) {
+            apiService = ApiFactory.create(Constant.BASE_URL_DIRECTION);
         }
 
         return apiService;

@@ -5,17 +5,91 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Directions implements Parcelable {
+import java.util.List;
 
-    @SerializedName("routes") public Routes routes;
+public class Directions implements Parcelable, Comparable<Directions> {
 
-    @SerializedName("status") public String status;
+    @SerializedName("copyrights")
+    public String copyrights;
 
-    public String directionIcon;
+    @SerializedName("summary")
+    public String summary;
+
+    @SerializedName("bounds")
+    public Bounds bounds;
+
+    @SerializedName("legs")
+    public List<Legs> legs;
+
+    @SerializedName("overview_polyline")
+    public Routes.OverviewPolyline overview_polyline;
+
+    @SerializedName("warnings")
+    public List<String> warnings;
+
+    @SerializedName("waypoint_order")
+    public List<String> waypoint_order;
+
+    @Override
+    public int compareTo(Directions o) {
+        return this.legs.get(0).steps.get(0).distance.value.compareTo(o.legs.get(0).steps.get(0).distance.value);
+    }
+
+    public static class OverviewPolyline implements Parcelable {
+        @SerializedName("points")
+        public String points;
+
+        protected OverviewPolyline(Parcel in) {
+            points = in.readString();
+        }
+
+        public static final Creator<Routes.OverviewPolyline> CREATOR = new Creator<Routes.OverviewPolyline>() {
+            @Override
+            public Routes.OverviewPolyline createFromParcel(Parcel in) {
+                return new Routes.OverviewPolyline(in);
+            }
+
+            @Override
+            public Routes.OverviewPolyline[] newArray(int size) {
+                return new Routes.OverviewPolyline[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(points);
+        }
+    }
 
     protected Directions(Parcel in) {
-        status = in.readString();
-        directionIcon = in.readString();
+        copyrights = in.readString();
+        summary = in.readString();
+        bounds = in.readParcelable(Bounds.class.getClassLoader());
+        legs = in.createTypedArrayList(Legs.CREATOR);
+        overview_polyline = in.readParcelable(Routes.OverviewPolyline.class.getClassLoader());
+        warnings = in.createStringArrayList();
+        waypoint_order = in.createStringArrayList();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(copyrights);
+        dest.writeString(summary);
+        dest.writeParcelable(bounds, flags);
+        dest.writeTypedList(legs);
+        dest.writeParcelable(overview_polyline, flags);
+        dest.writeStringList(warnings);
+        dest.writeStringList(waypoint_order);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<Directions> CREATOR = new Creator<Directions>() {
@@ -29,63 +103,4 @@ public class Directions implements Parcelable {
             return new Directions[size];
         }
     };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(status);
-        dest.writeString(directionIcon);
-    }
-
-    public class Routes{
-        @SerializedName("legs") public Legs legs;
-
-        public class Legs{
-
-            @SerializedName("distance") public Distance distance;
-
-            @SerializedName("duration") public Duration duration;
-
-            @SerializedName("steps") public Steps steps;
-
-            public class Distance {
-
-                @SerializedName("text") public String text;
-
-                @SerializedName("value") public String value;
-
-            }
-
-            public class Duration{
-
-                @SerializedName("text") public String text;
-
-                @SerializedName("value") public String value;
-
-            }
-
-            public class Steps{
-
-                @SerializedName("html_instructions") public String html_instructions;
-
-                @SerializedName("maneuver") public String maneuver;
-
-                @SerializedName("distance") public Distance distance;
-
-                public class Distance {
-
-                    @SerializedName("text") public String text;
-
-                    @SerializedName("value") public String value;
-
-                }
-
-            }
-
-        }
-    }
 }

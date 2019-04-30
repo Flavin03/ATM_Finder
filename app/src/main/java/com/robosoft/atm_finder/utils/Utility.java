@@ -5,6 +5,7 @@ import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.SphericalUtil;
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.map.model.PlaceModel;
 
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class Utility {
 
-    public static List<PlaceModel> calculateDistance(Location location, List<PlaceModel> placesArrayList) {
+    public static List<PlaceModel> calculateDistance(LatLng latLng, List<PlaceModel> placesArrayList) {
 
         List<PlaceModel> placeModelArrayList = new ArrayList<>();
         if (placesArrayList != null && placesArrayList.size() > 0)
@@ -23,7 +24,7 @@ public class Utility {
             Location loc = new Location("");
             loc.setLatitude(placeModel.geometry.location.lat);
             loc.setLongitude(placeModel.geometry.location.lng);
-            placeModel.distanceFrom = (int) location.distanceTo(loc);
+            placeModel.distanceFrom = (int) SphericalUtil.computeDistanceBetween(latLng, new LatLng(loc.getLatitude(),loc.getLongitude()));
         }
         return placeModelArrayList;
     }
@@ -52,6 +53,11 @@ public class Utility {
         LatLng endLatLng = new LatLng(placeModel.geometry.location.lat,
                 placeModel.geometry.location.lng);
 
+        return getDirectionUrl(startLatLng, endLatLng, context);
+    }
+
+    public static String getDirectionUrl(LatLng startLatLng, LatLng endLatLng, Context context){
+
         String apiKey = context.getResources().getString(R.string.google_maps_key);
         // Origin of route
         String str_origin = "origin=" + startLatLng.latitude + "," + startLatLng.longitude;
@@ -62,14 +68,15 @@ public class Utility {
         // Sensor enabled
         String sensor = "sensor=false";
 
+        String travelMode = "&mode=walking";
+
         // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor;
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + travelMode;
 
         // Building the url to the web service
-        String url = "json?" + parameters + "&key=" + apiKey;
+        String url = Constant.BASE_URL_DIRECTION+"json?" + parameters + "&key=" + apiKey;
 
         return url;
-
     }
 
 }

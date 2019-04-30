@@ -10,11 +10,11 @@ import com.robosoft.atm_finder.MyApplication;
 import com.robosoft.atm_finder.directions.model.Directions;
 import com.robosoft.atm_finder.directions.model.DirectionsResponse;
 import com.robosoft.atm_finder.map.model.PlaceModel;
-import com.robosoft.atm_finder.map.model.PlaceResponse;
 import com.robosoft.atm_finder.network.ApiService;
-import com.robosoft.atm_finder.utils.Constant;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Observable;
 
@@ -30,22 +30,25 @@ public class DirectionViewModel extends Observable {
 
     private List<Directions> directionsList;
     private Context context;
+    private PlaceModel placeModel;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
 
     public DirectionViewModel(@NonNull Context context) {
         this.context = context;
         this.directionsList = new ArrayList<>();
-        progressBar = new ObservableInt(View.GONE);
+        //progressBar = new ObservableInt(View.GONE);
+        progressBar = new ObservableInt(View.VISIBLE);
         directionsRecycler = new ObservableInt(View.GONE);
     }
 
-    public void fetchDirectionsList(String directionURL) {
+    public void fetchDirectionsList(String directionURL, PlaceModel placeModel) {
+        this.placeModel = placeModel;
 
         MyApplication appController = MyApplication.create(context);
-        ApiService apiService = appController.getPlaceService();
+        ApiService apiService = appController.getDirectionService();
 
-        Disposable disposable = apiService.fetchDirections(Constant.BASE_URL_DIRECTION)
+        Disposable disposable = apiService.fetchDirections(directionURL)
                 .subscribeOn(appController.subscribeScheduler())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<DirectionsResponse>() {
@@ -67,13 +70,60 @@ public class DirectionViewModel extends Observable {
     }
 
     private void updateDirectionsList(List<Directions> DirectionsList) {
-        directionsList.addAll(directionsList);
+        Collections.sort(DirectionsList);
+
+        Comparator<Directions> compareById = (Directions o1, Directions o2) -> o1.legs.get(0).steps.get(0).distance.value.compareTo( o2.legs.get(0).steps.get(0).distance.value );
+
+        Collections.sort(DirectionsList, compareById);
+
+        directionsList.addAll(DirectionsList);
         setChanged();
         notifyObservers();
     }
 
-    public List<Directions> getDirectionsList()
-    {
+    public String getPlaceName() {
+        return placeModel.name;
+    }
+
+    public String getPlaceDetail() {
+        return placeModel.vicinity;
+    }
+
+    public String getDistance() {
+        if (directionsList.size()!=0) {
+            return directionsList.get(0).legs.get(0).distance.text;
+        }else{
+            return null;
+        }
+    }
+
+    public String getDuration(){
+        if (directionsList.size()!=0) {
+        return directionsList.get(0).legs.get(0).duration.text;
+        }else{
+            return null;
+        }
+    }
+
+    public String getImageicon() {
+        // The URL will usually come from a model (i.e Profile)
+        return placeModel.filterType;
+    }
+
+    public List<Directions> getDirectionsList() {
         return directionsList;
     }
+
+    private void unSubscribeFromObservable() {
+        if (compositeDisposable != null && !compositeDisposable.isDisposed()) {
+            compositeDisposable.dispose();
+        }
+    }
+
+    public void reset() {
+        unSubscribeFromObservable();
+        compositeDisposable = null;
+        context = null;
+    }
+
 }

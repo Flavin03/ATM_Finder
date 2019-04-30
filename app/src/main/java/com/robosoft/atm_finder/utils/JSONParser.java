@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.directions.model.DirectionModel;
+import com.robosoft.atm_finder.directions.model.Directions;
 import com.robosoft.atm_finder.map.adapter.RecyclerViewAdapter;
 import com.robosoft.atm_finder.map.model.PlaceModel;
 
@@ -36,52 +37,23 @@ public class JSONParser {
      */
     private static final String TAG = "JSONParser";
 
-    public List<List<HashMap<String, String>>> parse(JSONObject jObject) {
+    public  List<LatLng> parse(List<Directions> directions) {
 
-        List<List<HashMap<String, String>>> routes = new ArrayList<List<HashMap<String, String>>>();
-        JSONArray jRoutes = null;
-        JSONArray jLegs = null;
-        JSONArray jSteps = null;
-        JSONObject jDistance = null;
-        JSONObject jDuration = null;
-        String directionString = null;
-        String instructionString = null;
+        List<LatLng> latLngList = new ArrayList<>();
+        List<Directions> directionsList = directions;
 
         try {
-
-            jRoutes = jObject.getJSONArray("routes");
-
-            /** Traversing all routes */
-            for (int i = 0; i < jRoutes.length(); i++) {
-                jLegs = ((JSONObject) jRoutes.get(i)).getJSONArray("legs");
+            for (int i = 0; i < directionsList.size(); i++) {
 
                 List<HashMap<String, String>> path = new ArrayList<HashMap<String, String>>();
 
-                /** Traversing all legs */
-                for (int j = 0; j < jLegs.length(); j++) {
+                for (int j = 0; j < directionsList.get(i).legs.size(); j++) {
 
-                    /** Getting distance from the json data */
-                    jDistance = ((JSONObject) jLegs.get(j)).getJSONObject("distance");
-                    HashMap<String, String> hmDistance = new HashMap<String, String>();
-                    hmDistance.put("distance", jDistance.getString("text"));
-
-                    /** Getting duration from the json data */
-                    jDuration = ((JSONObject) jLegs.get(j)).getJSONObject("duration");
-                    HashMap<String, String> hmDuration = new HashMap<String, String>();
-                    hmDuration.put("duration", jDuration.getString("text"));
-
-                    /** Adding distance object to the path */
-                    path.add(hmDistance);
-
-                    /** Adding duration object to the path */
-                    path.add(hmDuration);
-
-                    jSteps = ((JSONObject) jLegs.get(j)).getJSONArray("steps");
-
-                    /** Traversing all steps */
-                    for (int k = 0; k < jSteps.length(); k++) {
+                    for (int k = 0; k < directionsList.get(i).legs.get(j).steps.size(); k++) {
                         String polyline = "";
-                        polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
+
+                        polyline = directionsList.get(0).legs.get(j).steps.get(k).polyline.points;
+
                         List<LatLng> list = decodePoly(polyline);
 
                         /** Traversing all points */
@@ -90,70 +62,18 @@ public class JSONParser {
                             hm.put("lat", Double.toString(((LatLng) list.get(l)).latitude));
                             hm.put("lng", Double.toString(((LatLng) list.get(l)).longitude));
                             path.add(hm);
+
+                            latLngList.add(new LatLng((((LatLng) list.get(l)).latitude),(((LatLng) list.get(l)).longitude)));
                         }
                     }
                 }
-                routes.add(path);
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-        }
-        return routes;
-    }
-
-    public ArrayList<DirectionModel> parseDirection(String directionResult) {
-
-        JSONObject jsonObject;
-        ArrayList<DirectionModel> directionModelArrayList = new ArrayList<>();
-        JSONArray jRoutes = null;
-        JSONArray jLegs = null;
-        JSONArray jSteps = null;
-        JSONObject jDistance = null;
-        JSONObject jDuration = null;
-        int distance = 0;
-        String directionString = null;
-        String instructionString = null;
-
-        try {
-            jsonObject = new JSONObject(directionResult);
-
-            jRoutes = jsonObject.getJSONArray("routes");
-
-            /** Traversing all routes */
-            for (int i = 0; i < jRoutes.length(); i++) {
-                jLegs = ((JSONObject) jRoutes.get(i)).getJSONArray("legs");
-
-                /** Traversing all legs */
-                for (int j = 0; j < jLegs.length(); j++) {
-
-                    jSteps = ((JSONObject) jLegs.get(j)).getJSONArray("steps");
-
-                    /** Traversing all steps */
-                    for (int k = 0; k < jSteps.length(); k++) {
-                        DirectionModel directionModel = new DirectionModel();
-
-                        distance = Integer.parseInt(((JSONObject) ((JSONObject) jSteps.get(k)).get("distance")).getString("value"));
-                        instructionString = (String) ((JSONObject) jSteps.get(k)).getString("html_instructions");
-
-                        if(((JSONObject) jSteps.get(k)).has("maneuver"))
-                            directionString = ((JSONObject) jSteps.get(k)).getString("maneuver");
-
-                        directionModel.setDistance(distance);
-                        directionModel.setInstruction(instructionString);
-                        directionModel.setDirection(directionString);
-
-                        directionModelArrayList.add(directionModel);
-                    }
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
         }
-        return directionModelArrayList;
+        return latLngList;
     }
+
 
     /**
      * Method to decode polyline points
@@ -191,7 +111,6 @@ public class JSONParser {
         }
         return poly;
     }
-
 
 
 }
