@@ -12,8 +12,8 @@ import java.util.Observable;
 
 public class DialogViewModel extends ViewModel {
 
-   // private ObservableField<String> filter = new ObservableField<>();;
-    private MutableLiveData<String> filter  = new MutableLiveData<String>();;
+    // private ObservableField<String> filter = new ObservableField<>();;
+    private MutableLiveData<String> filter = new MutableLiveData<String>();
 
     private static final String TAG = "DialogViewModel";
 
@@ -22,45 +22,40 @@ public class DialogViewModel extends ViewModel {
     private Dialog dialog;
 
     public DialogViewModel(Dialog dialog, Context context) {
+        Log.d(TAG, "Parameterized constructor called");
         this.context = context;
         this.dialog = dialog;
-        /*filter = new MutableLiveData<>();*/
     }
 
-    public DialogViewModel() {}
+    public DialogViewModel() {
+    }
 
     public void onBankClick(View v) {
-        Log.d(TAG,"onBankClick");
-
+        Log.d(TAG, "onBankClick");
+        getFilter().postValue("Bank");
         filter.postValue("Bank");
-       // filter.postValue("Bank");
-        //filter = "Bank";
-       /* setChanged();
-        notifyObservers();*/
+        Log.d(TAG, "getFilter onBankClick : " + getFilter().getValue());
         dialog.dismiss();
     }
 
     public void onAtmClick(View v) {
-        Log.d(TAG,"onAtmClick");
-
+        Log.d(TAG, "onAtmClick");
+        getFilter().postValue("Atm");
         filter.postValue("Atm");
-       // filter.postValue("Atm");
-       // filter = "Atm";
-       /* setChanged();
-        notifyObservers();*/
+        Log.d(TAG, "getFilter onAtmClick : " + getFilter().getValue());
         dialog.dismiss();
     }
 
     public void onCancelClick(View v) {
-        Log.d(TAG,"onCancelClick");
+        Log.d(TAG, "onCancelClick");
         dialog.dismiss();
     }
 
-    public MutableLiveData<String> getFilter()
-    {
+    public MutableLiveData<String> getFilter() {
+        if (filter == null) {
+            filter = new MutableLiveData<>();
+        }
         return filter;
-
-       // return filter;
     }
 
 }

@@ -98,10 +98,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_maps);
 
         initDataBinding();
-
         setPlacesView(mapsActivityBinding.recyclerView);
         setUpObserver(mapViewModel);
         setDialogViewModel();
@@ -113,7 +111,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         if (!Places.isInitialized()) {
             Places.initialize(this, getResources().getString(R.string.google_maps_key));
@@ -138,11 +135,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15.0f));
                     mMap.addMarker(new MarkerOptions().position(place.getLatLng()));
                     showMarkers(mapViewModel.getPlaceCacheMap().get(place.getId()));
-                }
-                else{
+                } else {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15.0f));
                     mMap.addMarker(new MarkerOptions().position(place.getLatLng()));
-                    mapViewModel.fetchPlacesList(Utility.requestPlaces(place.getLatLng().latitude, place.getLatLng().longitude, filterType, MapsActivity.this), place.getLatLng(), place.getId());
+                    if (checkConnection()) {
+                        mapViewModel.fetchPlacesList(Utility.requestPlaces(place.getLatLng().latitude, place.getLatLng().longitude, filterType, MapsActivity.this), place.getLatLng(), place.getId());
+                    } else {
+                        Toast.makeText(MapsActivity.this, "No Internet", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
@@ -152,15 +152,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
-
-
     }
 
     private void initDataBinding() {
         mapsActivityBinding = DataBindingUtil.setContentView(this, R.layout.activity_maps);
         mapViewModel = new MapViewModel(this);
         mapsActivityBinding.setMapViewModel(mapViewModel);
-
     }
 
     private void setPlacesView(RecyclerView placesView) {
@@ -195,16 +192,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //dialogViewModel = new DialogViewModel(null,this);
         dialogViewModel = ViewModelProviders.of(this).get(DialogViewModel.class);
         // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
-        dialogViewModel.getFilter().observe(this, dialogObserver);
+        dialogViewModel.getFilter().observe(this, new android.arch.lifecycle.Observer<String>() {
+            @Override
+            public void onChanged(@Nullable final String filter) {
+                // Update the UI, in this case, a TextView.
+                Log.d(TAG, "onChanged filter : " + filter);
+            }
+        });
     }
-
-    final android.arch.lifecycle.Observer<String> dialogObserver = new android.arch.lifecycle.Observer<String>() {
-        @Override
-        public void onChanged(@Nullable final String filter) {
-            // Update the UI, in this case, a TextView.
-            Log.d(TAG, "onChanged filter : " + filter);
-        }
-    };
 
     private boolean isAlreadySearched(String placeId) {
         for (String place : mapViewModel.getPlaceCacheMap().keySet()) {
@@ -379,8 +374,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Getting URL to the Google Directions API
         ///String url = getDirectionsUrl(startLatLng, endLatLng);
         String url = Utility.getDirectionUrl(startLatLng, endLatLng, this);
-        mapViewModel.fetchDirectionsList(url);
 
+        if (checkConnection()) {
+            mapViewModel.fetchDirectionsList(url);
+        } else {
+            Toast.makeText(MapsActivity.this, "No Internet", Toast.LENGTH_SHORT).show();
+        }
         return false;
     }
 

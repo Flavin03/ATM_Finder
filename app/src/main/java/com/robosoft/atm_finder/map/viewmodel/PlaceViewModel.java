@@ -9,11 +9,15 @@ import android.nfc.Tag;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.robosoft.atm_finder.R;
 import com.robosoft.atm_finder.directions.activities.DirectionsActivity;
 import com.robosoft.atm_finder.map.activities.MapsActivity;
 import com.robosoft.atm_finder.map.model.PlaceModel;
+import com.robosoft.atm_finder.utils.ConnectivityReceiver;
+import com.robosoft.atm_finder.utils.Utility;
 
 public class PlaceViewModel extends BaseObservable {
 
@@ -37,26 +41,23 @@ public class PlaceViewModel extends BaseObservable {
         return placeModel.distanceFrom;
     }
 
-    public void onItemClick(View v){
+    public void onItemClick(View v) {
         //context.startActivity(UserDetailActivity.fillDetail(v.getContext(), user));
         System.out.println("Directions clicked");
-
-        Intent intent = new Intent(context, DirectionsActivity.class);
-        intent.putExtra("placeModel",placeModel);
-        intent.putExtra("mLastKnownLocation",MapsActivity.mLastKnownLocation);
-        context.startActivity(intent);
-
+        if (ConnectivityReceiver.isConnected()) {
+            Intent intent = new Intent(context, DirectionsActivity.class);
+            intent.putExtra("placeModel", placeModel);
+            intent.putExtra("mLastKnownLocation", MapsActivity.mLastKnownLocation);
+            context.startActivity(intent);
+        } else {
+            Toast.makeText(context, "No Internet", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public String getImageicon() {
         // The URL will usually come from a model (i.e Profile)
         return placeModel.filterType;
     }
-
-   /* @BindingAdapter({"android:src"})
-    public static void setImageicon(ImageView view, String imageUrl) {
-       view.setImageDrawable(view.getContext().getResources().getDrawable(R.drawable.bank_icn));
-    }*/
 
     public void setPlace(PlaceModel placeModel) {
         this.placeModel = placeModel;

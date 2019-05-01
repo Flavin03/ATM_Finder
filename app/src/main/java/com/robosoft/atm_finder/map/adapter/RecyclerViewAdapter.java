@@ -62,18 +62,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
         holder.bindPlaces(placeModelList.get(position));
 
-       /* if (placeModel.getType().equalsIgnoreCase("bank")) {
-            holder.bank_atm_icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.bank_icn));
-        } else {
-            holder.bank_atm_icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.atm_icn));
-        }
-
-        holder.direction_icon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                directionCardListener.onDirectionClick(position);
-            }
-        });*/
     }
 
     @Override

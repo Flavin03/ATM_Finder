@@ -1,6 +1,7 @@
 package com.robosoft.atm_finder;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.robosoft.atm_finder.map.activities.MapsActivity;
 
@@ -43,9 +45,7 @@ public class SplashActivity extends AppCompatActivity {
         imageView.postDelayed(new Runnable() {
             @Override
             public void run() {
-
                 launchActivity();
-
             }
         }, 2000);
 
@@ -53,7 +53,6 @@ public class SplashActivity extends AppCompatActivity {
 
     public void launchActivity() {
         if (checkRuntimePermissions()) {
-
             final LocationManager manager = (LocationManager) getSystemService(this.LOCATION_SERVICE);
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 enableLoc();
@@ -80,11 +79,9 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void requestMultiplePermission() {
-
         // Creating String Array with Permissions.
         ActivityCompat.requestPermissions(SplashActivity.this, new String[]
                 {Manifest.permission.INTERNET, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE);
-
     }
 
     // Calling override method.
@@ -123,7 +120,6 @@ public class SplashActivity extends AppCompatActivity {
                         public void onConnected(Bundle bundle) {
 
                         }
-
                         @Override
                         public void onConnectionSuspended(int i) {
                             googleApiClient.connect();
@@ -154,14 +150,18 @@ public class SplashActivity extends AppCompatActivity {
                 public void onResult(LocationSettingsResult result) {
                     final Status status = result.getStatus();
                     switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // All location settings are satisfied. The client can initialize location
+                            // requests here.
+                            break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             try {
                                 // Show the dialog by calling startResolutionForResult(),
                                 // and check the result in onActivityResult().
                                 status.startResolutionForResult(SplashActivity.this, REQUEST_LOCATION);
 
-                                startActivity(new Intent(SplashActivity.this, MapsActivity.class));
-                                finish();
+                                /*startActivity(new Intent(SplashActivity.this, MapsActivity.class));
+                                finish();*/
                             } catch (IntentSender.SendIntentException e) {
                                 // Ignore the error.
                                 Log.d(TAG, "onResult: "+e.getMessage());
@@ -173,6 +173,31 @@ public class SplashActivity extends AppCompatActivity {
                     }
                 }
             });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+        switch (requestCode) {
+            case REQUEST_LOCATION:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                        startActivity(new Intent(SplashActivity.this, MapsActivity.class));
+                        finish();
+
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        if (!states.isGpsUsable()) {
+                            // Degrade gracefully depending on what is available
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                break;
         }
     }
 
